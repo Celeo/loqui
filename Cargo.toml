@@ -18,9 +18,10 @@ categories = [
 
 [dependencies]
 anyhow = "1.0.31"
-axum = "0.4.2"
-fern = "0.6.0"
+args = "2.2.0"
+axum = { version = "0.4.2", features = ["ws", "headers"] }
+fern = { version = "0.6.0", features = ["colored"] }
+getopts = "0.2.21"
 headers = "0.3.5"
 log = "0.4.8"
 tokio = { version = "1.14.0", features = ["full"] }
-tower-http = { version = "0.2.0", features = ["fs", "trace"] }
