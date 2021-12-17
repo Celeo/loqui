@@ -1,7 +1,10 @@
+#![deny(unsafe_code)]
+#![deny(clippy::all)]
+
 use anyhow::Result;
 use args::Args;
 use axum::{
-    extract::ws::{WebSocket, WebSocketUpgrade},
+    extract::ws::{Message, WebSocket, WebSocketUpgrade},
     response::IntoResponse,
     routing::get,
     Router,
@@ -10,8 +13,10 @@ use fern::{
     colors::{Color, ColoredLevelConfig},
     Dispatch,
 };
-use log::{debug, info, warn, LevelFilter};
+use log::{debug, error, info, warn, LevelFilter};
 use std::{io, net::SocketAddr};
+
+mod db;
 
 /// Set up logging based on whether or not the user wants to see debug logging.
 fn setup_logging(debug: bool) -> Result<()> {
@@ -49,14 +54,19 @@ async fn main() {
     }
     setup_logging(args.value_of("debug").unwrap()).expect("Could not set up logging");
 
-    debug!("Setting up");
-    let app = Router::new().route("/ws", get(ws_handler));
+    debug!("Setting up db");
+    db::create_tables(&db::connect().unwrap()).unwrap();
+
+    debug!("Setting up web server");
+    let app = Router::new().route("/", get(ws_handler));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     info!("Listening on {}", addr);
-    axum::Server::bind(&addr)
+    if let Err(e) = axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
-        .unwrap();
+    {
+        error!("Could not start listener: {}", e);
+    };
     warn!("Socket server ended");
 }
 
@@ -64,23 +74,24 @@ async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
     ws.on_upgrade(handle_socket)
 }
 
-async fn handle_socket(mut _socket: WebSocket) {
-    // if let Some(msg) = socket.recv().await {
-    //     if let Ok(msg) = msg {
-    //         debug!("Client says: {:?}", msg);
-    //     } else {
-    //         debug!("Client disconnected");
-    //         return;
-    //     }
-    // }
-    // loop {
-    //     if socket
-    //         .send(Message::Text(String::from("Hi!")))
-    //         .await
-    //         .is_err()
-    //     {
-    //         debug!("Client disconnected");
-    //         return;
-    //     }
-    // }
+async fn handle_socket(mut socket: WebSocket) {
+    if let Some(msg) = socket.recv().await {
+        if let Ok(msg) = msg {
+            debug!("Client says: {:?}", msg);
+        } else {
+            debug!("Client disconnected");
+            return;
+        }
+    }
+    loop {
+        if socket
+            .send(Message::Text(String::from("Hi!")))
+            .await
+            .is_err()
+        {
+            debug!("Client disconnected");
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+    }
 }
