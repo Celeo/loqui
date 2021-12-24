@@ -11,6 +11,8 @@
   - It's longer than JSON
 - https://crates.io/crates/serde_json
 - https://crates.io/crates/bendy
+- https://github.com/apache/avro/tree/master/lang/rust
+- https://github.com/stepancheg/rust-protobuf
 
 ProtoBuf
 Avro
