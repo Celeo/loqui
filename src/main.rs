@@ -15,12 +15,19 @@ use fern::{
     Dispatch,
 };
 use log::{debug, error, info, warn, LevelFilter};
-use std::{io, net::SocketAddr, sync::Arc};
+use std::{
+    collections::HashSet,
+    io,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+};
+use tokio::sync::broadcast;
 
 mod db;
 
 struct AppState {
-    connections: Vec<WebSocket>,
+    user_set: Mutex<HashSet<String>>,
+    tx: broadcast::Sender<String>,
 }
 
 const WELCOME_TEXT: &str = r#"Welcome to the server."#;
@@ -66,13 +73,15 @@ async fn main() {
     debug!("Setting up db");
     db::create_tables(&db::connect().unwrap()).unwrap();
 
-    debug!("Setting up web server");
-    let shared_app_state = Arc::new(AppState {
-        connections: Vec::new(),
-    });
+    debug!("Setting up state");
+    let user_set = Mutex::new(HashSet::new());
+    let (tx, _rx) = broadcast::channel(100);
+    let app_state = Arc::new(AppState { user_set, tx });
+
+    debug!("Setting up server");
     let app = Router::new()
-        .route("/", get(ws_handler))
-        .layer(AddExtensionLayer::new(shared_app_state));
+        .route("/", get(websocket_handler))
+        .layer(AddExtensionLayer::new(app_state));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     info!("Listening on {}", addr);
     if let Err(e) = axum::Server::bind(&addr)
@@ -84,16 +93,14 @@ async fn main() {
     warn!("Socket server ended");
 }
 
-// TODO https://github.com/tokio-rs/axum/blob/main/examples/chat/src/main.rs
-
-async fn ws_handler(
+async fn websocket_handler(
     ws: WebSocketUpgrade,
     Extension(state): Extension<Arc<AppState>>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(|socket| handle_socket(socket, state))
+    ws.on_upgrade(|socket| websocket(socket, state))
 }
 
-async fn handle_socket(mut socket: WebSocket, state: Arc<AppState>) {
+async fn websocket(mut socket: WebSocket, _state: Arc<AppState>) {
     debug!("Client connected");
     if socket
         .send(Message::Text(String::from(WELCOME_TEXT)))
@@ -103,17 +110,6 @@ async fn handle_socket(mut socket: WebSocket, state: Arc<AppState>) {
         debug!("Client disconnected");
         return;
     }
-    loop {
-        if let Some(msg) = socket.recv().await {
-            if let Ok(msg) = msg {
-                if let Message::Text(content) = msg {
-                    debug!("Client says: {:?}", content);
-                    // ...
-                }
-            } else {
-                debug!("Client disconnected");
-                return;
-            }
-        }
-    }
+    debug!("Interaction loop with client");
+    // https://github.com/tokio-rs/axum/blob/main/examples/chat/src/main.rs#L59
 }
