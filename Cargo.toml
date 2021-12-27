@@ -23,6 +23,7 @@ axum = { version = "0.4.2", features = ["ws", "headers"] }
 bcrypt = "0.10.1"
 chrono = { version = "0.4.19", features = ["serde"] }
 fern = { version = "0.6.0", features = ["colored"] }
+futures = "0.3.19"
 log = "0.4.8"
 rusqlite = { version = "0.26.3", features = ["chrono", "uuid"] }
 serde = { version = "1.0.131", features = ["derive"] }

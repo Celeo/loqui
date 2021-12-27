@@ -14,19 +14,14 @@ use fern::{
     colors::{Color, ColoredLevelConfig},
     Dispatch,
 };
+use futures::{sink::SinkExt, stream::StreamExt};
 use log::{debug, error, info, warn, LevelFilter};
-use std::{
-    collections::HashSet,
-    io,
-    net::SocketAddr,
-    sync::{Arc, Mutex},
-};
+use std::{io, net::SocketAddr, sync::Arc};
 use tokio::sync::broadcast;
 
 mod db;
 
 struct AppState {
-    user_set: Mutex<HashSet<String>>,
     tx: broadcast::Sender<String>,
 }
 
@@ -74,9 +69,8 @@ async fn main() {
     db::create_tables(&db::connect().unwrap()).unwrap();
 
     debug!("Setting up state");
-    let user_set = Mutex::new(HashSet::new());
     let (tx, _rx) = broadcast::channel(100);
-    let app_state = Arc::new(AppState { user_set, tx });
+    let app_state = Arc::new(AppState { tx });
 
     debug!("Setting up server");
     let app = Router::new()
@@ -100,9 +94,9 @@ async fn websocket_handler(
     ws.on_upgrade(|socket| websocket(socket, state))
 }
 
-async fn websocket(mut socket: WebSocket, _state: Arc<AppState>) {
+async fn websocket(mut stream: WebSocket, state: Arc<AppState>) {
     debug!("Client connected");
-    if socket
+    if stream
         .send(Message::Text(String::from(WELCOME_TEXT)))
         .await
         .is_err()
@@ -111,5 +105,44 @@ async fn websocket(mut socket: WebSocket, _state: Arc<AppState>) {
         return;
     }
     debug!("Interaction loop with client");
-    // https://github.com/tokio-rs/axum/blob/main/examples/chat/src/main.rs#L59
+
+    // https://github.com/tokio-rs/axum/blob/main/examples/chat/src/main.rs#L59 (ish)
+    let (mut sender, mut receiver) = stream.split();
+    let mut username = String::new();
+    while let Some(Ok(message)) = receiver.next().await {
+        if let Message::Text(name) = message {
+            let name = name.trim();
+            if !name.is_empty() {
+                debug!("Client set username to {}", &name);
+                username.push_str(name);
+                break;
+            }
+        }
+    }
+    let mut rx = state.tx.subscribe();
+    state.tx.send(format!("{} joined", username)).unwrap();
+
+    let mut send_task = tokio::spawn(async move {
+        while let Ok(msg) = rx.recv().await {
+            if sender.send(Message::Text(msg)).await.is_err() {
+                break;
+            }
+        }
+    });
+
+    let tx = state.tx.clone();
+    let name = username.clone();
+
+    let mut recv_task = tokio::spawn(async move {
+        while let Some(Ok(Message::Text(text))) = receiver.next().await {
+            tx.send(format!("{}: {}", name, text)).unwrap();
+        }
+    });
+
+    tokio::select! {
+        _ = (&mut send_task) => recv_task.abort(),
+        _ = (&mut recv_task) => send_task.abort(),
+    };
+
+    state.tx.send(format!("{} left", username)).unwrap();
 }

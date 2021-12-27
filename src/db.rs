@@ -1,3 +1,5 @@
+#![allow(unused)] // TODO remove
+
 use anyhow::Result;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use rusqlite::{params, Connection, Result as DatabaseResult, Row};
