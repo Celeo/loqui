@@ -51,6 +51,9 @@ export function socketOnMessage(
       }`,
     );
     switch (connectionMapEntry.sessionStatus) {
+      // Currently this is taking a very simple approach to
+      // authentication; this will need to be updated to support
+      // the operation schema.
       case SessionStatus.SUPPLY_USERNAME: {
         if (usernameRegex.test(trimmed)) {
           if (
@@ -61,7 +64,6 @@ export function socketOnMessage(
             socket.send(
               "That username is currently on the server; you need to use another",
             );
-            socket.close();
             return;
           }
           if (userExists(trimmed)) {
@@ -75,11 +77,10 @@ export function socketOnMessage(
           }
           connectionMapEntry.username = trimmed;
           connectionMapEntry.sessionStatus = SessionStatus.SUPPLY_PASSWORD;
-          return;
         } else {
           socket.send(`Username "${trimmed}" does not match ${usernameRegex}.`);
-          return;
         }
+        return;
       }
       case SessionStatus.SUPPLY_PASSWORD: {
         if (trimmed.length < 8 || trimmed.length > 100) {
@@ -106,6 +107,9 @@ export function socketOnMessage(
         return;
       }
       case SessionStatus.AUTHENTICATED: {
+        // Currently this is just sending messages, but it'll
+        // need to be expanded to support the actual operation
+        // schema and non-chatting commands.
         Object.keys(connectionMap)
           .filter(
             (key) =>
