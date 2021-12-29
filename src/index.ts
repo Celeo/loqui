@@ -25,7 +25,7 @@ function handleSocket(
   socket.onopen = () => {
     socket.send("Welcome!");
     socket.send(
-      `Please supply a username as you first message, matching ${usernameRegex}.`,
+      `Please supply a username as your first message, matching ${usernameRegex}.`,
     );
   };
 
