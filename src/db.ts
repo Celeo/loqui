@@ -10,6 +10,16 @@ export interface User {
   joined: Date;
 }
 
+/**
+ * Channel from DB.
+ */
+export interface Channel {
+  id: number;
+  name: string;
+  requiresInvite: boolean;
+  creatorId: number | null;
+}
+
 const SQL_CREATE_TABLE_USERS = `
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,7 +33,7 @@ CREATE TABLE IF NOT EXISTS channels (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   requiresInvite BOOLEAN NOT NULL DEFAULT 0,
-  creatorId INTEGER NOT NULL,
+  creatorId INTEGER,
   FOREIGN KEY(creatorId) REFERENCES users(id),
   UNIQUE(name)
 )`;
@@ -40,9 +50,12 @@ const SQL_INSERT_GENERAL_CHANNEL =
 const SQL_FETCH_USER = "SELECT * FROM users WHERE username = ?1 LIMIT 1";
 const SQL_STORE_USER =
   "INSERT INTO users (username, passwordHash, joined) VALUES (?1, ?2, ?3)";
+const SQL_ADD_GENERAL_CHANNEL_MEMBERSHIP =
+  "INSERT INTO channel_memberships (userId, channelId) VALUES (?1, 1)";
 const SQL_FETCH_ALL_CHANNELS = "SELECT * FROM channels";
-const SQL_FETCH_USER_CHANNEL_MEMBERSHIPS =
-  "SELECT * FROM channel_memberships WHERE userId = ?1";
+const SQL_FETCH_USER_CHANNEL_MEMBERSHIPS = `SELECT channels.id, channels.name
+FROM channel_memberships LEFT JOIN channels ON channel_memberships.channelId = channels.id
+WHERE userId = ?1`;
 
 /**
  * Username requirements.
@@ -53,7 +66,7 @@ export const usernameRegex = /^[a-z0-9][a-z0-9_-]{2,14}$/;
  * Create DB tables.
  */
 export function createTables(): void {
-  const db = new DB("data.db");
+  const db = new DB("data.db", { mode: "create" });
   db.query(SQL_CREATE_TABLE_USERS);
   db.query(SQL_CREATE_TABLE_CHANNELS);
   db.query(SQL_CREATE_TABLE_CHANNEL_MEMBERSHIPS);
@@ -65,7 +78,7 @@ export function createTables(): void {
  * Retrieve a user from the database.
  */
 export function getUser(username: string): User | null {
-  const db = new DB("data.db");
+  const db = new DB("data.db", { mode: "read" });
   for (const row of db.query(SQL_FETCH_USER, [username])) {
     db.close();
     return {
@@ -103,9 +116,39 @@ export async function storeNewUser(
   username: string,
   password: string,
 ): Promise<User> {
-  const db = new DB("data.db");
+  const db = new DB("data.db", { mode: "write" });
   const hashed = await bcrypt.hash(password, await bcrypt.genSalt(8));
   db.query(SQL_STORE_USER, [username, hashed, new Date().getTime()]);
+  const createdUser = getUser(username) as User;
+  db.query(SQL_ADD_GENERAL_CHANNEL_MEMBERSHIP, [createdUser.id]);
   db.close();
-  return getUser(username) as User;
+  return createdUser;
+}
+
+export function getAllChannels(): Array<Channel> {
+  const db = new DB("data.db", { mode: "read" });
+  const ret: Array<Channel> = db
+    .query(SQL_FETCH_ALL_CHANNELS)
+    .map((row) => ({
+      id: row[0] as number,
+      name: row[1] as string,
+      requiresInvite: row[2] === 1,
+      creatorId: row[3] === null ? null : row[3] as number,
+    }));
+  db.close();
+  return ret;
+}
+
+/**
+ * Retrieve the channels the user is a member of.
+ */
+export function getUserChannelMemberships(
+  userId: number,
+): Array<[number, string]> {
+  const db = new DB("data.db", { mode: "read" });
+  const ret: Array<[number, string]> = db
+    .query(SQL_FETCH_USER_CHANNEL_MEMBERSHIPS, [userId])
+    .map((row) => [row[0] as number, row[1] as string]);
+  db.close();
+  return ret;
 }

@@ -1,5 +1,5 @@
 import { serve } from "./deps.ts";
-import { createTables } from "./db.ts";
+import { createTables, getAllChannels } from "./db.ts";
 import { SessionStatus, socketOnMessage, UserData } from "./socket.ts";
 
 /**
@@ -33,7 +33,7 @@ function handleSocket(
 
   socket.onclose = () => {
     const username = connectionMap[uuid].userInfo?.username;
-    if (username !== null) {
+    if (username) {
       console.log(`${username} disconnected`);
     }
     delete connectionMap[uuid];
@@ -45,6 +45,7 @@ function handleSocket(
  */
 export function main(hostname: string, port: number) {
   createTables();
+  const channels = getAllChannels(); // TODO use
   const connectionMap = {};
   console.log(`Listening on ${hostname}:${port}`);
   serve(

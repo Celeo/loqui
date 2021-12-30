@@ -60,7 +60,7 @@ async function register(
     socket.send("Password length must be between 8 and 100 (inclusive)");
     return;
   }
-  if (!userExists(username)) {
+  if (userExists(username)) {
     socket.send("A user with that name already exists");
     return;
   }
