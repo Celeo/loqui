@@ -1,11 +1,6 @@
 import { serve } from "./deps.ts";
 import { createTables } from "./db.ts";
-import {
-  SessionStatus,
-  socketOnMessage,
-  UserData,
-  usernameRegex,
-} from "./socket.ts";
+import { SessionStatus, socketOnMessage, UserData } from "./socket.ts";
 
 /**
  * Set up the websocket's connections.
@@ -17,35 +12,29 @@ function handleSocket(
   const uuid = crypto.randomUUID();
   connectionMap[uuid] = {
     socket,
-    sessionStatus: SessionStatus.SUPPLY_USERNAME,
-    username: null,
-    channels: [],
+    uuid,
+    sessionStatus: SessionStatus.ANONYMOUS,
+    userInfo: null,
+    channelMemberships: [],
   };
 
   socket.onopen = () => {
     socket.send("Welcome!");
-    socket.send(
-      `Please supply a username as your first message, matching ${usernameRegex}.`,
-    );
   };
 
   socket.onmessage = socketOnMessage(socket, uuid, connectionMap);
 
   socket.onerror = (event) => {
     if (event instanceof ErrorEvent) {
-      if (connectionMap[uuid].username !== null) {
-        console.log(
-          `Socket error from ${connectionMap[uuid].username}: ${event.message}`,
-        );
-      } else {
-        console.log(`Socket error from ${uuid}: ${event.message}`);
-      }
+      const username = connectionMap[uuid].userInfo?.username || "*unknown*";
+      console.log(`Socket error from ${username}: ${event.message}`);
     }
   };
 
   socket.onclose = () => {
-    if (connectionMap[uuid].username !== null) {
-      console.log(`${connectionMap[uuid].username} disconnected`);
+    const username = connectionMap[uuid].userInfo?.username;
+    if (username !== null) {
+      console.log(`${username} disconnected`);
     }
     delete connectionMap[uuid];
   };

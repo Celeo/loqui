@@ -1,16 +1,21 @@
-import { getUser, storeNewUser, userExists, validatePassword } from "./db.ts";
+// TODO
+// deno-lint-ignore-file no-unused-vars require-await
+
+import {
+  getUser,
+  storeNewUser,
+  User,
+  userExists,
+  usernameRegex,
+  validatePassword,
+} from "./db.ts";
+import { Operation, Operations, parseOperation } from "./operations.ts";
 
 /**
- * Username requirements.
- */
-export const usernameRegex = /^[a-z0-9][a-z0-9_-]{2,14}$/;
-
-/**
- * Authentication process.
+ * Authentication process representation.
  */
 export enum SessionStatus {
-  SUPPLY_USERNAME,
-  SUPPLY_PASSWORD,
+  ANONYMOUS,
   AUTHENTICATED,
 }
 
@@ -20,10 +25,154 @@ export enum SessionStatus {
  */
 export interface UserData {
   socket: WebSocket;
+  uuid: string;
   sessionStatus: SessionStatus;
-  username: string | null;
-  channels: Array<string>;
+  userInfo: User | null;
+  channelMemberships: Array<string>;
 }
+
+function updateMap(
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+  userInfo: User,
+): void {
+  connectionMap[uuid] = {
+    ...connectionMap[uuid],
+    sessionStatus: SessionStatus.AUTHENTICATED,
+    userInfo,
+    channelMemberships: [], // TODO
+  };
+}
+
+async function register(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  const username = (operation.payload as Array<string>)[0];
+  const password = (operation.payload as Array<string>)[1];
+  if (!usernameRegex.test(username)) {
+    socket.send(`Username must match ${usernameRegex}`);
+    return;
+  }
+  if (password.length < 8 || password.length > 100) {
+    socket.send("Password length must be between 8 and 100 (inclusive)");
+    return;
+  }
+  if (!userExists(username)) {
+    socket.send("A user with that name already exists");
+    return;
+  }
+  const userInfo = await storeNewUser(username, password);
+  updateMap(uuid, connectionMap, userInfo);
+  socket.send(`Registered. Welcome, ${username}`);
+}
+
+async function authenticate(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  const username = (operation.payload as Array<string>)[0];
+  const password = (operation.payload as Array<string>)[1];
+  if (!usernameRegex.test(username)) {
+    socket.send(`Username must match ${usernameRegex}`);
+    return;
+  }
+  if (password.length < 8 || password.length > 100) {
+    socket.send("Password length must be between 8 and 100 (inclusive)");
+    return;
+  }
+  const dbUser = getUser(username);
+  if (dbUser === null) {
+    socket.send("Incorrect login information");
+    return;
+  }
+  if (!(await validatePassword(dbUser, password))) {
+    socket.send("Incorrect login information");
+  }
+  updateMap(uuid, connectionMap, dbUser);
+  socket.send(`Authenticated. Welcome, ${username}`);
+}
+
+async function my_info(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  if (connectionMap[uuid].sessionStatus !== SessionStatus.AUTHENTICATED) {
+    socket.send("Only available after authentication");
+    return;
+  }
+  socket.send(JSON.stringify(connectionMap[uuid]));
+}
+
+async function whois(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  // TODO
+}
+
+async function channels(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  // TODO
+}
+
+async function join(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  // TODO
+}
+
+async function leave(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  // TODO
+}
+
+async function message(
+  operation: Operation,
+  socket: WebSocket,
+  uuid: string,
+  connectionMap: Record<string, UserData>,
+): Promise<void> {
+  // TODO
+}
+
+const OPERATIONS_MAP: Record<
+  number,
+  (
+    operation: Operation,
+    socket: WebSocket,
+    uuid: string,
+    connectionMap: Record<string, UserData>,
+  ) => Promise<void>
+> = {
+  [Operations.REGISTER]: register,
+  [Operations.AUTHENTICATE]: authenticate,
+  [Operations.MY_INFO]: my_info,
+  [Operations.WHOIS]: whois,
+  [Operations.CHANNELS]: channels,
+  [Operations.JOIN]: join,
+  [Operations.LEAVE]: leave,
+  [Operations.MESSAGE]: message,
+};
 
 /**
  * Handler for socket messages.
@@ -37,92 +186,23 @@ export function socketOnMessage(
   connectionMap: Record<string, UserData>,
 ): (event: MessageEvent<string>) => Promise<void> {
   return async function (event: MessageEvent<string>) {
-    if (typeof event.data !== "string") {
+    const operation = parseOperation(event.data);
+    if (operation === null) {
+      socket.send("No command recognized");
       return;
     }
-    const trimmed = event.data.trim();
-    if (trimmed.length === 0) {
-      return;
-    }
-    const connectionMapEntry = connectionMap[uuid];
-    console.log(
-      `Message from socket ${uuid} at state ${
-        SessionStatus[connectionMapEntry.sessionStatus]
-      }`,
-    );
-    switch (connectionMapEntry.sessionStatus) {
-      // Currently this is taking a very simple approach to
-      // authentication; this will need to be updated to support
-      // the operation schema.
-      case SessionStatus.SUPPLY_USERNAME: {
-        if (usernameRegex.test(trimmed)) {
-          if (
-            Object.values(connectionMap).find((data) =>
-              data.username === trimmed
-            ) !== null
-          ) {
-            socket.send(
-              "That username is currently on the server; you need to use another",
-            );
-            return;
-          }
-          if (userExists(trimmed)) {
-            socket.send(
-              `Welcome back, ${trimmed}. Please enter the password for that account or disconnect and use another username.`,
-            );
-          } else {
-            socket.send(
-              `Welcome, ${trimmed}. Please now set a password of length [8, 100].`,
-            );
-          }
-          connectionMapEntry.username = trimmed;
-          connectionMapEntry.sessionStatus = SessionStatus.SUPPLY_PASSWORD;
-        } else {
-          socket.send(`Username "${trimmed}" does not match ${usernameRegex}.`);
-        }
-        return;
-      }
-      case SessionStatus.SUPPLY_PASSWORD: {
-        if (trimmed.length < 8 || trimmed.length > 100) {
-          socket.send("Please supply a password of length [8, 100].");
-          return;
-        }
-        const selectedUsername = connectionMapEntry.username as string;
-        const dbUser = getUser(selectedUsername);
-        if (dbUser === null) {
-          await storeNewUser(selectedUsername, trimmed);
-          socket.send("New password accepted.");
-        } else {
-          if (await validatePassword(dbUser, trimmed)) {
-            socket.send("Password validated.");
-          } else {
-            socket.send("Incorrect password.");
-            return;
-          }
-        }
-        socket.send(
-          `\n=================================\nWelcome to the server!\n=================================\n`,
-        );
-        connectionMapEntry.sessionStatus = SessionStatus.AUTHENTICATED;
-        return;
-      }
-      case SessionStatus.AUTHENTICATED: {
-        // Currently this is just sending messages, but it'll
-        // need to be expanded to support the actual operation
-        // schema and non-chatting commands.
-        Object.keys(connectionMap)
-          .filter(
-            (key) =>
-              key !== uuid &&
-              connectionMap[key].sessionStatus === SessionStatus.AUTHENTICATED,
-          )
-          .forEach((key) => {
-            connectionMap[key].socket.send(
-              `[${connectionMap[uuid].username}] ${trimmed}`,
-            );
-          });
-        return;
-      }
+    try {
+      await OPERATIONS_MAP[operation.id](
+        operation,
+        socket,
+        uuid,
+        connectionMap,
+      );
+    } catch (e) {
+      const username = connectionMap[uuid].userInfo?.username || "*unknown*";
+      console.log(
+        `Error processing operation ${operation.id} from ${username}: ${e}`,
+      );
     }
   };
 }
