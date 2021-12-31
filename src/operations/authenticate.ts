@@ -1,17 +1,13 @@
 import { getUser, usernameRegex, validatePassword } from "../db.ts";
 import {
   makeOperationResponse,
-  Operation,
+  OperationExecuteFnData,
   Operations,
   updateMap,
-  UserData,
 } from "../util.ts";
 
 export async function execute(
-  operation: Operation,
-  socket: WebSocket,
-  uuid: string,
-  connectionMap: Record<string, UserData>,
+  { operation, socket, uuid, connectionMap }: OperationExecuteFnData,
 ): Promise<void> {
   const payload = operation.payload as Array<string>;
   const username = payload[0];

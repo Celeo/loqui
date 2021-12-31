@@ -1,10 +1,5 @@
-import { Operation, UserData } from "../util.ts";
+import { OperationExecuteFnData } from "../util.ts";
 
-export async function execute(
-  operation: Operation,
-  socket: WebSocket,
-  uuid: string,
-  connectionMap: Record<string, UserData>,
-): Promise<void> {
+export async function execute(data: OperationExecuteFnData): Promise<void> {
   //  TODO
 }

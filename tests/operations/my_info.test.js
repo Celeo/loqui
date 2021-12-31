@@ -9,7 +9,7 @@ Deno.test("operation - my_info - cannot be anon", async () => {
   };
   const fake = sinon.fake();
   const socket = { send: fake };
-  await execute(null, socket, "abc", connectionMap);
+  await execute({ socket, uuid: "abc", connectionMap });
   assertEquals(fake.callCount, 1);
   assertEquals(
     fake.getCall(0).firstArg,
@@ -34,7 +34,7 @@ Deno.test("operation - my_info - works", async () => {
   };
   const fake = sinon.fake();
   const socket = { send: fake };
-  await execute(null, socket, "abc", connectionMap);
+  await execute({ socket, uuid: "abc", connectionMap });
   assertEquals(fake.callCount, 1);
   assertEquals(
     fake.getCall(0).firstArg,

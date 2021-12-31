@@ -1,17 +1,13 @@
 import {
   makeOperationResponse,
-  Operation,
+  OperationExecuteFnData,
   Operations,
   SessionStatus,
-  UserData,
 } from "../util.ts";
 
 // deno-lint-ignore require-await
 export async function execute(
-  _: Operation,
-  socket: WebSocket,
-  uuid: string,
-  connectionMap: Record<string, UserData>,
+  { socket, uuid, connectionMap }: OperationExecuteFnData,
 ): Promise<void> {
   const connectionMapEntry = connectionMap[uuid];
   if (connectionMapEntry.sessionStatus !== SessionStatus.AUTHENTICATED) {

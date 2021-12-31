@@ -1,4 +1,4 @@
-import { User } from "./db.ts";
+import { Channel, User } from "./db.ts";
 
 /**
  * Authentication process representation.
@@ -122,11 +122,19 @@ export function parseOperation(payload: string): Operation | null {
 }
 
 /**
+ * Operation execution function parameter type.
+ */
+export interface OperationExecuteFnData {
+  operation: Operation;
+  socket: WebSocket;
+  uuid: string;
+  connectionMap: Record<string, UserData>;
+  channels: Array<Channel>;
+}
+
+/**
  * Type for operation execution functions.
  */
 export type OperationExecuteFn = (
-  operation: Operation,
-  socket: WebSocket,
-  uuid: string,
-  connectionMap: Record<string, UserData>,
+  data: OperationExecuteFnData,
 ) => Promise<void>;
