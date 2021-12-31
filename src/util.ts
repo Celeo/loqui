@@ -73,6 +73,8 @@ export enum Operations {
   JOIN,
   LEAVE,
   MESSAGE,
+  CHANNEL_CREATE,
+  CHANNEL_INVITE,
 }
 
 export const OPERATIONS_LENGTH =

@@ -7,6 +7,8 @@ import { execute as channels } from "./channels.ts";
 import { execute as join } from "./join.ts";
 import { execute as leave } from "./leave.ts";
 import { execute as message } from "./message.ts";
+import { execute as channel_create } from "./channel_create.ts";
+import { execute as channel_invite } from "./channel_invite.ts";
 
 export const OPERATIONS_MAP: Record<
   number,
@@ -20,4 +22,6 @@ export const OPERATIONS_MAP: Record<
   [Operations.JOIN]: join,
   [Operations.LEAVE]: leave,
   [Operations.MESSAGE]: message,
+  [Operations.CHANNEL_CREATE]: channel_create,
+  [Operations.CHANNEL_INVITE]: channel_invite,
 };

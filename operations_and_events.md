@@ -159,6 +159,32 @@ Send a message to a channel. You must be a member of the channel at the time of
 invoking this operation. The arguments to this command are in an object as the
 functionality of this operation is expected to expand.
 
+#### 14 - Channel create
+
+Args:
+
+```json
+{
+  "name": "<channel name>",
+  "has_whitelist": "<boolean>"
+}
+```
+
+Create a channel.
+
+#### 15 - Channel invite
+
+Args:
+
+```json
+{
+  "channel_name": "<channel name>",
+  "user_name": "<user name>"
+}
+```
+
+Invite someone to a channel. You must have created it, and it must have a whitelist.
+
 ## Events
 
 Events are sent from the server to users.
