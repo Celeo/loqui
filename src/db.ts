@@ -127,6 +127,9 @@ export async function storeNewUser(
   return createdUser;
 }
 
+/**
+ * Return a list of all channels.
+ */
 export function getAllChannels(): Array<Channel> {
   const db = new DB("data.db", { mode: "read" });
   const ret: Array<Channel> = db

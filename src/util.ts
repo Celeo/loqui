@@ -35,6 +35,7 @@ export function updateMap(
   };
 }
 
+/** */
 export interface EventOperationResponse {
   type: string;
   trigger: string;
@@ -45,6 +46,7 @@ export interface EventOperationResponse {
   };
 }
 
+/** */
 export function makeOperationResponse(
   id: number,
   succeeded: boolean,
@@ -77,6 +79,9 @@ export enum Operations {
   CHANNEL_INVITE,
 }
 
+/**
+ * Number of operations.
+ */
 export const OPERATIONS_LENGTH =
   Object.keys(Operations).filter((e) => isNaN(Number(e))).length;
 
@@ -116,6 +121,9 @@ export function parseOperation(payload: string): Operation | null {
   }
 }
 
+/**
+ * Type for operation execution functions.
+ */
 export type OperationExecuteFn = (
   operation: Operation,
   socket: WebSocket,
