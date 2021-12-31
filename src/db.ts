@@ -1,3 +1,5 @@
+// TODO may want to switch to https://github.com/eveningkid/denodb
+
 import { bcrypt, DB } from "./deps.ts";
 
 /**

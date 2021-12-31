@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.119.0/testing/asserts.ts";
-import { parseOperation } from "../src/operations.ts";
+import { makeOperationResponse, parseOperation } from "../src/util.ts";
 
 Deno.test("parseOperation fails for empty input", () => {
   assertEquals(parseOperation(""), null);
@@ -24,5 +24,17 @@ Deno.test("parseOperation works for valid input", () => {
       "foo",
       "bar",
     ],
+  });
+});
+
+Deno.test("makeOperationResponse", () => {
+  assertEquals(makeOperationResponse(1, true, "foobar"), {
+    type: "event",
+    trigger: "operation",
+    payload: {
+      succeeded: true,
+      operation_id: 1,
+      message: "foobar",
+    },
   });
 });
