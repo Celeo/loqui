@@ -1,4 +1,4 @@
-import { parseOperation, UserData } from "./util.ts";
+import { makeOperationResponse, parseOperation, UserData } from "./util.ts";
 import { OPERATIONS_MAP } from "./operations/index.ts";
 
 /**
@@ -15,7 +15,11 @@ export function socketOnMessage(
   return async function (event: MessageEvent<string>) {
     const operation = parseOperation(event.data);
     if (operation === null) {
-      socket.send("No command recognized");
+      socket.send(
+        JSON.stringify(
+          makeOperationResponse(-1, false, "No command recognized"),
+        ),
+      );
       return;
     }
     try {

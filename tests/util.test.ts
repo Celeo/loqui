@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.119.0/testing/asserts.ts";
+import { assertEquals } from "./test_deps.ts";
 import { makeOperationResponse, parseOperation } from "../src/util.ts";
 
 Deno.test("parseOperation fails for empty input", () => {

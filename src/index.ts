@@ -1,6 +1,7 @@
 import { serve } from "./deps.ts";
-import { createTables, getAllChannels } from "./db.ts";
-import { SessionStatus, socketOnMessage, UserData } from "./socket.ts";
+import { Channel, createTables, getAllChannels } from "./db.ts";
+import { socketOnMessage } from "./socket.ts";
+import { SessionStatus, UserData } from "./util.ts";
 
 /**
  * Set up the websocket's connections.
@@ -8,6 +9,7 @@ import { SessionStatus, socketOnMessage, UserData } from "./socket.ts";
 function handleSocket(
   socket: WebSocket,
   connectionMap: Record<string, UserData>,
+  channels: Array<Channel>,
 ): void {
   const uuid = crypto.randomUUID();
   connectionMap[uuid] = {
@@ -45,7 +47,7 @@ function handleSocket(
  */
 export function main(hostname: string, port: number) {
   createTables();
-  const channels = getAllChannels(); // TODO use
+  const channels = getAllChannels();
   const connectionMap = {};
   console.log(`Listening on ${hostname}:${port}`);
   serve(
@@ -59,7 +61,7 @@ export function main(hostname: string, port: number) {
         } catch {
           return new Response("Websocket upgrade failed", { status: 400 });
         }
-        handleSocket(socket, connectionMap);
+        handleSocket(socket, connectionMap, channels);
         return response;
       }
       return new Response("Open a websocket connection to /ws");

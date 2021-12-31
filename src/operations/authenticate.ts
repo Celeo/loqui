@@ -63,6 +63,7 @@ export async function execute(
         ),
       ),
     );
+    return;
   }
   updateMap(uuid, connectionMap, dbUser);
   socket.send(

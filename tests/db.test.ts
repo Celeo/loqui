@@ -1,4 +1,4 @@
-import { assert } from "https://deno.land/std@0.119.0/testing/asserts.ts";
+import { assert } from "./test_deps.ts";
 import { bcrypt } from "../src/deps.ts";
 import { validatePassword } from "../src/db.ts";
 
