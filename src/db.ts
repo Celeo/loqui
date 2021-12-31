@@ -55,7 +55,7 @@ const SQL_STORE_USER =
 const SQL_ADD_GENERAL_CHANNEL_MEMBERSHIP =
   "INSERT INTO channel_memberships (userId, channelId) VALUES (?1, 1)";
 const SQL_FETCH_ALL_CHANNELS = "SELECT * FROM channels";
-const SQL_FETCH_USER_CHANNEL_MEMBERSHIPS = `SELECT channels.id, channels.name
+const SQL_FETCH_USER_CHANNEL_MEMBERSHIPS = `SELECT channels.name
 FROM channel_memberships LEFT JOIN channels ON channel_memberships.channelId = channels.id
 WHERE userId = ?1`;
 
@@ -149,11 +149,11 @@ export function getAllChannels(): Array<Channel> {
  */
 export function getUserChannelMemberships(
   userId: number,
-): Array<[number, string]> {
+): Array<string> {
   const db = new DB("data.db", { mode: "read" });
-  const ret: Array<[number, string]> = db
+  const ret: Array<string> = db
     .query(SQL_FETCH_USER_CHANNEL_MEMBERSHIPS, [userId])
-    .map((row) => [row[0] as number, row[1] as string]);
+    .map((row) => row[0] as string);
   db.close();
   return ret;
 }

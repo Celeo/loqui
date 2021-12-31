@@ -133,7 +133,7 @@ to join has such a system in place, your username must be configured there prior
 to invoking this operation, or it will fail. If you are already a member of the
 channel, a warning will be returned but no other action needs to be taken.
 
-#### 12- Leave
+#### 12 - Leave
 
 Args:
 
@@ -282,7 +282,7 @@ specific information.
 }
 ```
 
-(5) You successfully join a channel (note the empty `message`)
+(5) You successfully join a channel
 
 ```json
 {

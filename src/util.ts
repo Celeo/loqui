@@ -1,4 +1,4 @@
-import { Channel, User } from "./db.ts";
+import { Channel, getUserChannelMemberships, User } from "./db.ts";
 
 /**
  * Authentication process representation.
@@ -31,7 +31,7 @@ export function updateMap(
     ...connectionMap[uuid],
     sessionStatus: SessionStatus.AUTHENTICATED,
     userInfo,
-    channelMemberships: [], // TODO
+    channelMemberships: getUserChannelMemberships(userInfo.id),
   };
 }
 
@@ -68,15 +68,15 @@ export function makeOperationResponse(
  */
 export enum Operations {
   REGISTER = 1,
-  AUTHENTICATE,
-  MY_INFO,
-  WHOIS,
-  CHANNELS,
-  JOIN,
-  LEAVE,
-  MESSAGE,
-  CHANNEL_CREATE,
-  CHANNEL_INVITE,
+  AUTHENTICATE = 2,
+  MY_INFO = 3,
+  WHOIS = 4,
+  CHANNELS = 10,
+  JOIN = 11,
+  LEAVE = 12,
+  MESSAGE = 13,
+  CHANNEL_CREATE = 14,
+  CHANNEL_INVITE = 15,
 }
 
 /**
@@ -109,7 +109,7 @@ export function parseOperation(payload: string): Operation | null {
   try {
     const trimmed = payload.trim();
     const id = Number(trimmed.substring(0, 2));
-    if (isNaN(id) || id > OPERATIONS_LENGTH) {
+    if (isNaN(id) || !(id in Operations)) {
       return null;
     }
     return {
