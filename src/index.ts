@@ -52,6 +52,15 @@ function handleSocket(
       console.log(
         `Error processing operation ${operation.id} from ${username}: ${e}`,
       );
+      socket.send(
+        JSON.stringify(
+          makeOperationResponse(
+            operation.id,
+            false,
+            "Could not process operation",
+          ),
+        ),
+      );
     }
   };
 

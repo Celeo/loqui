@@ -15,6 +15,8 @@ export async function execute(
     );
   };
 
+  // TODO support sending messages to a user
+
   const connectionMapEntry = connectionMap[uuid];
   if (connectionMapEntry.sessionStatus === SessionStatus.ANONYMOUS) {
     deny("Must be authenticated");

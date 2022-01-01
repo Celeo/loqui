@@ -112,9 +112,16 @@ export function parseOperation(payload: string): Operation | null {
     if (isNaN(id) || !(id in Operations)) {
       return null;
     }
+    const rest = trimmed.substring(2, trimmed.length);
+    if (rest.length > 0) {
+      return {
+        id,
+        payload: JSON.parse(rest),
+      };
+    }
     return {
       id,
-      payload: JSON.parse(trimmed.substring(2, trimmed.length)),
+      payload: null,
     };
   } catch {
     return null;

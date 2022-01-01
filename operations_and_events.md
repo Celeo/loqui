@@ -150,12 +150,12 @@ Args:
 
 ```json
 {
-  "target": "<channel name>",
+  "target": "<channel or user name>",
   "message": "<message"
 }
 ```
 
-Send a message to a channel. You must be a member of the channel at the time of
+Send a message to a channel or user. You must be a member of the channel at the time of
 invoking this operation. The arguments to this command are in an object as the
 functionality of this operation is expected to expand.
 
