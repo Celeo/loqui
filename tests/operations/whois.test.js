@@ -1,4 +1,4 @@
-import { sinon, assertEquals } from "../test_deps.ts";
+import { assertEquals, sinon } from "../test_deps.ts";
 import { execute } from "../../src/operations/whois.ts";
 
 Deno.test("operation - whois - cannot be anon", async () => {
@@ -26,7 +26,7 @@ Deno.test("operation - whois - cannot be anon", async () => {
         operation_id: 4,
         message: "Must be authenticated",
       },
-    })
+    }),
   );
 });
 
@@ -55,7 +55,7 @@ Deno.test("operation - whois - no filter - no others - works", async () => {
         operation_id: 4,
         message: "[]",
       },
-    })
+    }),
   );
 });
 
@@ -90,7 +90,7 @@ Deno.test("operation - whois - no filter - others - works", async () => {
         operation_id: 4,
         message: '["john"]',
       },
-    })
+    }),
   );
 });
 
@@ -125,6 +125,6 @@ Deno.test("operation - whois - filter - works", async () => {
         operation_id: 4,
         message: "[]",
       },
-    })
+    }),
   );
 });

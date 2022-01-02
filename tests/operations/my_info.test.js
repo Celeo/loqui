@@ -1,4 +1,4 @@
-import { sinon, assertEquals } from "../test_deps.ts";
+import { assertEquals, sinon } from "../test_deps.ts";
 import { execute } from "../../src/operations/my_info.ts";
 
 Deno.test("operation - my_info - cannot be anon", async () => {
@@ -21,7 +21,7 @@ Deno.test("operation - my_info - cannot be anon", async () => {
         operation_id: 4,
         message: "Must be authenticated",
       },
-    })
+    }),
   );
 });
 
@@ -46,6 +46,6 @@ Deno.test("operation - my_info - works", async () => {
         operation_id: 4,
         message: '{"sessionStatus":1,"foo":"bar"}',
       },
-    })
+    }),
   );
 });
