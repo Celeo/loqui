@@ -29,3 +29,20 @@ As Deno uses permissions, the following permissions are required:
   - To [run bcrypt](https://github.com/JamesBroadberry/deno-bcrypt/issues/18)
 
 The justfile includes these as part of the commands.
+
+## Use
+
+Running the program will listen on http://127.0.0.1:8080 for HTTP connections, and will upgrade connections made to /ws to websocket. You can write a client or
+use something like [websocat](https://github.com/vi/websocat) to communicate on the command line.
+
+See the repository's wiki for more information.
+
+## License
+
+[MIT](LICENSE)
+
+## Contributing
+
+Please feel free to contribute. Please open an issue first (or comment on an existing one) so that I know that you want to add/change something.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you shall be licensed as above, without any additional terms or conditions.
