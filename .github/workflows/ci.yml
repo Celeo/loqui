@@ -16,6 +16,6 @@ jobs:
         with:
           deno-version: "~1.17"
       - name: Lint Deno Module
-        run: deno fmt --check --ignore='operations_and_events.md'
+        run: deno fmt --check --ignore='README.md,operations_and_events.md'
       - name: Test Deno Module
         run: deno test --allow-all --unstable
