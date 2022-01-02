@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Celeo/loqui/workflows/CI/badge.svg?branch=master)](https://github.com/Celeo/loqui/actions?query=workflow%3ACI)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Runtime](https://img.shields.io/badge/ruintime-Deno-orange)](https://deno.land/)
+[![Runtime](https://img.shields.io/badge/runtime-Deno-orange)](https://deno.land/)
 
 Simple JSON chat server over websockets.
 
