@@ -1,4 +1,4 @@
-import { storeNewUser, userExists, usernameRegex } from "../db.ts";
+import { createUser, User, usernameRegex } from "../db.ts";
 import {
   makeOperationResponse,
   OperationExecuteFnData,
@@ -36,7 +36,7 @@ export async function execute(
     );
     return;
   }
-  if (userExists(username)) {
+  if ((await User.where({ username }).count()) > 0) {
     socket.send(
       JSON.stringify(
         makeOperationResponse(
@@ -48,8 +48,8 @@ export async function execute(
     );
     return;
   }
-  const userInfo = await storeNewUser(username, password);
-  updateMap(uuid, connectionMap, userInfo);
+  const userInfo = await createUser(username, password);
+  await updateMap(uuid, connectionMap, userInfo);
   socket.send(
     JSON.stringify(
       makeOperationResponse(

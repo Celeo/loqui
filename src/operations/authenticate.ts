@@ -1,4 +1,4 @@
-import { getUser, usernameRegex, validatePassword } from "../db.ts";
+import { User, usernameRegex } from "../db.ts";
 import {
   makeOperationResponse,
   OperationExecuteFnData,
@@ -36,8 +36,8 @@ export async function execute(
     );
     return;
   }
-  const dbUser = getUser(username);
-  if (dbUser === null) {
+  const dbUser = await User.where({ username }).first();
+  if (dbUser === undefined) {
     socket.send(
       JSON.stringify(
         makeOperationResponse(
@@ -49,7 +49,8 @@ export async function execute(
     );
     return;
   }
-  if (!(await validatePassword(dbUser, password))) {
+  const dbUserValid = dbUser as User;
+  if (!(await dbUserValid.validatePassword(password))) {
     socket.send(
       JSON.stringify(
         makeOperationResponse(
@@ -61,7 +62,7 @@ export async function execute(
     );
     return;
   }
-  updateMap(uuid, connectionMap, dbUser);
+  await updateMap(uuid, connectionMap, dbUserValid);
   socket.send(
     JSON.stringify(
       makeOperationResponse(

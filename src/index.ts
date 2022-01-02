@@ -1,5 +1,5 @@
 import { serve } from "./deps.ts";
-import { Channel, createTables, getAllChannels } from "./db.ts";
+import { Channel } from "./db.ts";
 import {
   makeOperationResponse,
   parseOperation,
@@ -48,6 +48,9 @@ function handleSocket(
         channels,
       });
     } catch (e) {
+      if (!(uuid in connectionMap)) {
+        return;
+      }
       const username = connectionMap[uuid].userInfo?.username || "*unknown*";
       console.log(
         `Error processing operation ${operation.id} from ${username}: ${e}`,
@@ -83,9 +86,8 @@ function handleSocket(
 /**
  * Serve the HTTP server.
  */
-export function main(hostname: string, port: number) {
-  createTables();
-  const channels = getAllChannels();
+export async function main(hostname: string, port: number) {
+  const channels = await Channel.all() as Array<Channel>;
   const connectionMap = {};
   console.log(`Listening on ${hostname}:${port}`);
   serve(

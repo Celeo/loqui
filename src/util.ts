@@ -1,4 +1,4 @@
-import { Channel, getUserChannelMemberships, User } from "./db.ts";
+import { Channel, ChannelMembership, User } from "./db.ts";
 
 /**
  * Authentication process representation.
@@ -22,16 +22,22 @@ export interface UserData {
 /**
  * Update the connectionMap with a user's now-authenticated data.
  */
-export function updateMap(
+export async function updateMap(
   uuid: string,
   connectionMap: Record<string, UserData>,
   userInfo: User,
-): void {
+): Promise<void> {
+  const res = await ChannelMembership.where("userId", userInfo.id as number)
+    .leftJoin(
+      Channel,
+      Channel.field("id"),
+      ChannelMembership.field("channelId"),
+    ).get() as Array<Record<string, unknown>>;
   connectionMap[uuid] = {
     ...connectionMap[uuid],
     sessionStatus: SessionStatus.AUTHENTICATED,
     userInfo,
-    channelMemberships: getUserChannelMemberships(userInfo.id),
+    channelMemberships: res.map((membership) => membership["name"] as string),
   };
 }
 
