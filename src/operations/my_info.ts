@@ -12,19 +12,15 @@ export async function execute(
   const connectionMapEntry = connectionMap[uuid];
   if (connectionMapEntry.sessionStatus !== SessionStatus.AUTHENTICATED) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(Operations.WHOIS, false, "Must be authenticated"),
-      ),
+      makeOperationResponse(Operations.WHOIS, false, "Must be authenticated"),
     );
     return;
   }
   socket.send(
-    JSON.stringify(
-      makeOperationResponse(
-        Operations.WHOIS,
-        true,
-        JSON.stringify(connectionMapEntry),
-      ),
+    makeOperationResponse(
+      Operations.WHOIS,
+      true,
+      JSON.stringify(connectionMapEntry),
     ),
   );
 }

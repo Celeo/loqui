@@ -33,9 +33,7 @@ function handleSocket(
     const operation = parseOperation(event.data);
     if (operation === null) {
       socket.send(
-        JSON.stringify(
-          makeOperationResponse(-1, false, "No command recognized"),
-        ),
+        makeOperationResponse(-1, false, "No command recognized"),
       );
       return;
     }
@@ -56,12 +54,10 @@ function handleSocket(
         `Error processing operation ${operation.id} from ${username}: ${e}`,
       );
       socket.send(
-        JSON.stringify(
-          makeOperationResponse(
-            operation.id,
-            false,
-            "Could not process operation",
-          ),
+        makeOperationResponse(
+          operation.id,
+          false,
+          "Could not process operation",
         ),
       );
     }

@@ -14,24 +14,20 @@ export async function execute(
   const password = payload[1];
   if (!usernameRegex.test(username)) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(
-          Operations.AUTHENTICATE,
-          false,
-          `Username must match ${usernameRegex}`,
-        ),
+      makeOperationResponse(
+        Operations.AUTHENTICATE,
+        false,
+        `Username must match ${usernameRegex}`,
       ),
     );
     return;
   }
   if (password.length < 8 || password.length > 100) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(
-          Operations.AUTHENTICATE,
-          false,
-          "Password length must be between 8 and 100 (inclusive)",
-        ),
+      makeOperationResponse(
+        Operations.AUTHENTICATE,
+        false,
+        "Password length must be between 8 and 100 (inclusive)",
       ),
     );
     return;
@@ -39,12 +35,10 @@ export async function execute(
   const dbUser = await User.where({ username }).first();
   if (dbUser === undefined) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(
-          Operations.AUTHENTICATE,
-          false,
-          "Incorrect login information",
-        ),
+      makeOperationResponse(
+        Operations.AUTHENTICATE,
+        false,
+        "Incorrect login information",
       ),
     );
     return;
@@ -52,24 +46,20 @@ export async function execute(
   const dbUserValid = dbUser as User;
   if (!(await dbUserValid.validatePassword(password))) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(
-          Operations.AUTHENTICATE,
-          false,
-          "Incorrect login information",
-        ),
+      makeOperationResponse(
+        Operations.AUTHENTICATE,
+        false,
+        "Incorrect login information",
       ),
     );
     return;
   }
   await updateMap(uuid, connectionMap, dbUserValid);
   socket.send(
-    JSON.stringify(
-      makeOperationResponse(
-        Operations.AUTHENTICATE,
-        true,
-        `Authenticated. Welcome, ${username}`,
-      ),
+    makeOperationResponse(
+      Operations.AUTHENTICATE,
+      true,
+      `Authenticated. Welcome, ${username}`,
     ),
   );
 }

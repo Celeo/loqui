@@ -57,8 +57,8 @@ export function makeOperationResponse(
   id: number,
   succeeded: boolean,
   message: string,
-): EventOperationResponse {
-  return {
+): string {
+  return JSON.stringify({
     type: "event",
     trigger: "operation",
     payload: {
@@ -66,7 +66,7 @@ export function makeOperationResponse(
       operation_id: id,
       message,
     },
-  };
+  });
 }
 
 /**

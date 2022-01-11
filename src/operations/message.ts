@@ -11,7 +11,7 @@ export async function execute(
 ): Promise<void> {
   const deny = (message: string) => {
     socket.send(
-      JSON.stringify(makeOperationResponse(Operations.MESSAGE, false, message)),
+      makeOperationResponse(Operations.MESSAGE, false, message),
     );
   };
 
@@ -35,9 +35,7 @@ export async function execute(
     return;
   }
   socket.send(
-    JSON.stringify(
-      makeOperationResponse(Operations.MESSAGE, true, ""),
-    ),
+    makeOperationResponse(Operations.MESSAGE, true, ""),
   );
   Object.values(connectionMap).forEach((entry) => {
     if (entry.channelMemberships.includes(target)) {

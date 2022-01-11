@@ -11,9 +11,7 @@ export async function execute(
 ): Promise<void> {
   if (connectionMap[uuid].sessionStatus !== SessionStatus.AUTHENTICATED) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(Operations.WHOIS, false, "Must be authenticated"),
-      ),
+      makeOperationResponse(Operations.WHOIS, false, "Must be authenticated"),
     );
     return;
   }
@@ -31,12 +29,10 @@ export async function execute(
     usersFiltered = users;
   }
   socket.send(
-    JSON.stringify(
-      makeOperationResponse(
-        Operations.WHOIS,
-        true,
-        JSON.stringify(usersFiltered),
-      ),
+    makeOperationResponse(
+      Operations.WHOIS,
+      true,
+      JSON.stringify(usersFiltered),
     ),
   );
 }

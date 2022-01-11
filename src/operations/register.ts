@@ -14,36 +14,30 @@ export async function execute(
   const password = payload[1];
   if (!usernameRegex.test(username)) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(
-          Operations.REGISTER,
-          false,
-          `Username must match ${usernameRegex}`,
-        ),
+      makeOperationResponse(
+        Operations.REGISTER,
+        false,
+        `Username must match ${usernameRegex}`,
       ),
     );
     return;
   }
   if (password.length < 8 || password.length > 100) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(
-          Operations.REGISTER,
-          false,
-          "Password length must be between 8 and 100 (inclusive)",
-        ),
+      makeOperationResponse(
+        Operations.REGISTER,
+        false,
+        "Password length must be between 8 and 100 (inclusive)",
       ),
     );
     return;
   }
   if ((await User.where({ username }).count()) > 0) {
     socket.send(
-      JSON.stringify(
-        makeOperationResponse(
-          Operations.REGISTER,
-          false,
-          "A user with that name already exists",
-        ),
+      makeOperationResponse(
+        Operations.REGISTER,
+        false,
+        "A user with that name already exists",
       ),
     );
     return;
@@ -51,12 +45,10 @@ export async function execute(
   const userInfo = await createUser(username, password);
   await updateMap(uuid, connectionMap, userInfo);
   socket.send(
-    JSON.stringify(
-      makeOperationResponse(
-        Operations.REGISTER,
-        true,
-        `Registered. Welcome, ${username}`,
-      ),
+    makeOperationResponse(
+      Operations.REGISTER,
+      true,
+      `Registered. Welcome, ${username}`,
     ),
   );
 }

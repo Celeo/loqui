@@ -28,13 +28,16 @@ Deno.test("parseOperation works for valid input", () => {
 });
 
 Deno.test("makeOperationResponse", () => {
-  assertEquals(makeOperationResponse(1, true, "foobar"), {
-    type: "event",
-    trigger: "operation",
-    payload: {
-      succeeded: true,
-      operation_id: 1,
-      message: "foobar",
-    },
-  });
+  assertEquals(
+    makeOperationResponse(1, true, "foobar"),
+    JSON.stringify({
+      type: "event",
+      trigger: "operation",
+      payload: {
+        succeeded: true,
+        operation_id: 1,
+        message: "foobar",
+      },
+    }),
+  );
 });
